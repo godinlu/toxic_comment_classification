@@ -1,5 +1,5 @@
 import pandas as pd
-
+from sklearn.feature_extraction.text import CountVectorizer
 
 data = pd.read_csv("data/train.csv")
 print(data.shape)
