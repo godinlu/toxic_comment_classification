@@ -1,5 +1,5 @@
 import pandas as pd
-
+from sklearn.feature_extraction.text import CountVectorizer,TfidfVectorizer
 
 data = pd.read_csv("data/train.csv")
 print(data.shape)
@@ -19,4 +19,17 @@ first_row = X[0].toarray()
 print(first_row)
 print(sum(first_row[0])) 
 
+# Création d'une instance de TfidfVectorizer
+vectorizer = TfidfVectorizer()
+
+# Transformation des documents en vecteurs
+X = vectorizer.fit_transform(data["comment_text"])
+
+# Affichage des noms des fonctionnalités (mots)
+feature_names = vectorizer.get_feature_names_out()
+print(feature_names.shape)
+
+first_row = X[0].toarray()
+print(first_row)
+print(sum(first_row[0])) 
 
