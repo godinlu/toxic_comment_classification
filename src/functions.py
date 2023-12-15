@@ -24,7 +24,6 @@ def get_dataset()->tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]
 
 def classif_result(model, y_train, y_test, X_svd, X_test_svd):
     individual_estimators = model.estimators_
-    # Initialize an array to store the probabilities for each output
     y_pred_proba = []
 
     # Récuperer les probabilités pour chaque classe (données d'entraînement)
@@ -57,26 +56,23 @@ def classif_result(model, y_train, y_test, X_svd, X_test_svd):
     plt.subplot(1, 2, 1)
     for i in range(6):
         fpr, tpr, thresholds = roc_curve(y_train.iloc[:, i], y_pred_proba[:, i])
-        plt.plot(fpr, tpr, label=f'Class {i} ROC curve (Train)')
+        plt.plot(fpr, tpr, label=f'Courbe ROC de la classe {i} (Train)')
 
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('ROC Curve for Multiple Classes (Train)')
+    plt.xlabel('Taux de faux positifs')
+    plt.ylabel('Taux de vrais positifs')
+    plt.title('Courbes ROC de chaque classe (Train)')
     plt.legend()
 
     # Courbes ROC pour les données de test
     plt.subplot(1, 2, 2)
     for i in range(6):
         fpr_test, tpr_test, thresholds_test = roc_curve(y_test.iloc[:, i], y_test_pred_proba[:, i])
-        plt.plot(fpr_test, tpr_test, label=f'Class {i} ROC curve (Test)')
+        plt.plot(fpr_test, tpr_test, label=f'Courbe ROC de la classe {i} (Test)')
 
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('ROC Curve for Multiple Classes (Test)')
+    plt.xlabel('Taux de faux positifs')
+    plt.ylabel('Taux de vrais positifs')
+    plt.title('Courbes ROC de chaque classe (Test)')
     plt.legend()
 
     plt.tight_layout()
     plt.show()
-
-# Exemple d'utilisation
-# classif_result(model, y_train, y_test, X_svd, X_test_svd)
