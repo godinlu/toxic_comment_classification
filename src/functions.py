@@ -26,15 +26,16 @@ def get_dataset() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame,
     return (X_train, y_train, X_test, y_test)
 
 
-def classif_result(model, y_train, y_test, X_svd, X_test_svd):
+def classif_result(model, y_train, y_test, X_svd, X_test_svd, train=True):
     individual_estimators = model.estimators_
     y_pred_proba = []
 
     # Récuperer les probabilités pour chaque classe (données d'entraînement)
-    for estimator, target in zip(individual_estimators, y_train.columns):
-        y_pred_proba.append(estimator.predict_proba(X_svd)[:, 1])
+    if train:
+        for estimator, target in zip(individual_estimators, y_train.columns):
+            y_pred_proba.append(estimator.predict_proba(X_svd)[:, 1])
 
-    y_pred_proba = np.array(y_pred_proba).T
+        y_pred_proba = np.array(y_pred_proba).T
 
     # Récuperer les probabilités pour chaque classe (données de test)
     y_test_pred_proba = model.predict_proba(X_test_svd)
@@ -45,29 +46,33 @@ def classif_result(model, y_train, y_test, X_svd, X_test_svd):
     y_pred = model.predict(X_svd)
     y_test_pred = model.predict(X_test_svd)
 
-    accuracy = accuracy_score(y_train, y_pred)
-    report = classification_report(y_train, y_pred, zero_division=1)
+    if train:
+        accuracy = accuracy_score(y_train, y_pred)
+        report = classification_report(y_train, y_pred, zero_division=1)
+
     accuracy_test = accuracy_score(y_test, y_test_pred)
     report_test = classification_report(y_test, y_test_pred, zero_division=1)
+    if train:
+        print(f"Accuracy: {accuracy}")
+        print(f"Classification Report:\n{report}")
 
-    print(f"Accuracy: {accuracy}")
-    print(f"Classification Report:\n{report}")
     print(f"Accuracy Test: {accuracy_test}")
     print(f"Classification Report Test:\n{report_test}")
 
     plt.figure(figsize=(12, 5))
 
     # Courbes ROC pour les données d'entraînement
-    plt.subplot(1, 2, 1)
-    for i in range(6):
-        fpr, tpr, thresholds = roc_curve(y_train.iloc[:, i],
-                                         y_pred_proba[:, i])
-        plt.plot(fpr, tpr, label=f'Courbe ROC de la classe {i} (Train)')
+    if train:
+        plt.subplot(1, 2, 1)
+        for i in range(6):
+            fpr, tpr, thresholds = roc_curve(
+                y_train.iloc[:, i], y_pred_proba[:, i])
+            plt.plot(fpr, tpr, label=f'Courbe ROC de la classe {i} (Train)')
 
-    plt.xlabel('Taux de faux positifs')
-    plt.ylabel('Taux de vrais positifs')
-    plt.title('Courbes ROC de chaque classe (Train)')
-    plt.legend()
+        plt.xlabel('Taux de faux positifs')
+        plt.ylabel('Taux de vrais positifs')
+        plt.title('Courbes ROC de chaque classe (Train)')
+        plt.legend()
 
     # Courbes ROC pour les données de test
     plt.subplot(1, 2, 2)
