@@ -22,6 +22,18 @@ def get_dataset()->tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]
 
     return (X_train, y_train, X_test, y_test)
 
+def get_preprocess_dataset()->tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """this function return all of the dataSet with the vectorizing and the reduction of dimension 
+        of the chat like this
+        (X_train, y_train, X_test, y_test)
+    """
+    return (
+        pd.read_csv("data/X_train.csv", header=None), 
+        pd.read_csv("data/y_train.csv"),
+        pd.read_csv("data/X_test.csv", header=None),
+        pd.read_csv("data/y_test.csv")
+    )
+
 def classif_result(model, y_train, y_test, X_svd, X_test_svd):
     individual_estimators = model.estimators_
     y_pred_proba = []
