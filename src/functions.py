@@ -1,4 +1,7 @@
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score, classification_report,roc_curve
 
 def get_dataset()->tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """this function return all of the dataSet of the chat like this
@@ -19,39 +22,61 @@ def get_dataset()->tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]
 
     return (X_train, y_train, X_test, y_test)
 
-def get_pit()->tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """this function return all of the dataSet of the chat like this
-        (X_train, y_train, X_test, y_test)
-    """
-    # on commence par récupérer le jeu de données
-    train_set = pd.read_csv("data/train.csv")
+def classif_result(model, y_train, y_test, X_svd, X_test_svd):
+    individual_estimators = model.estimators_
+    # Initialize an array to store the probabilities for each output
+    y_pred_proba = []
 
+    # Récuperer les probabilités pour chaque classe (données d'entraînement)
+    for estimator, target in zip(individual_estimators, y_train.columns):
+        y_pred_proba.append(estimator.predict_proba(X_svd)[:, 1])
 
+    y_pred_proba = np.array(y_pred_proba).T
 
+    # Récuperer les probabilités pour chaque classe (données de test)
+    y_test_pred_proba = model.predict_proba(X_test_svd)
+    
+    y_test_pred_proba = np.array([class_prob[:, 1] for class_prob in y_test_pred_proba]).T
 
-    # Sélectionner les lignes qui ont des valeurs non nulles dans au moins une colonne
-    non_zero_rows = train_set[(train_set.iloc[:, 2:] != 0).any(axis=1)]
+    y_pred = model.predict(X_svd)
+    y_test_pred = model.predict(X_test_svd)
 
-    # Sélectionner les lignes qui ont que des zéros et en prendre environ 50%
-    only_zeros = train_set[(train_set.iloc[:, 2:] == 0).all(axis=1)].sample(frac=0.5)
+    accuracy = accuracy_score(y_train, y_pred)
+    report = classification_report(y_train, y_pred, zero_division=1)
+    accuracy_test = accuracy_score(y_test, y_test_pred)
+    report_test = classification_report(y_test, y_test_pred, zero_division=1)
 
-    # Concaténer les deux ensembles de données
-    result = pd.concat([non_zero_rows, only_zeros])
-    print(result.shape)
+    print(f"Accuracy: {accuracy}")
+    print(f"Classification Report:\n{report}")
+    print(f"Accuracy Test: {accuracy_test}")
+    print(f"Classification Report Test:\n{report_test}")
 
+    plt.figure(figsize=(12, 5))
 
-    X_train = train_set["comment_text"]  # Remplacez par les noms de vos colonnes cibles
-    y_train = train_set.drop(["id","comment_text"], axis=1)
+    # Courbes ROC pour les données d'entraînement
+    plt.subplot(1, 2, 1)
+    for i in range(6):
+        fpr, tpr, thresholds = roc_curve(y_train.iloc[:, i], y_pred_proba[:, i])
+        plt.plot(fpr, tpr, label=f'Class {i} ROC curve (Train)')
 
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curve for Multiple Classes (Train)')
+    plt.legend()
 
+    # Courbes ROC pour les données de test
+    plt.subplot(1, 2, 2)
+    for i in range(6):
+        fpr_test, tpr_test, thresholds_test = roc_curve(y_test.iloc[:, i], y_test_pred_proba[:, i])
+        plt.plot(fpr_test, tpr_test, label=f'Class {i} ROC curve (Test)')
 
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curve for Multiple Classes (Test)')
+    plt.legend()
 
+    plt.tight_layout()
+    plt.show()
 
-    # Jointure sur la colonne "ID"
-    test_set = pd.merge(pd.read_csv("data/test.csv"), pd.read_csv("data/test_labels.csv"), on='id')
-    test_set = test_set[test_set['toxic'] != -1]
-
-    X_test = test_set["comment_text"]
-    y_test = test_set.drop(["id","comment_text"], axis=1)
-
-    return (X_train, y_train, X_test, y_test)
+# Exemple d'utilisation
+# classif_result(model, y_train, y_test, X_svd, X_test_svd)
